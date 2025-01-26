@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar 3D Personalizable</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            background-color: #000000; /* Fondo completamente negro */
+            color: #fff;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+        .menu-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+            z-index: 1000;
+        }
+        .menu-container input {
+            padding: 15px;
+            font-size: 20px;
+            border-radius: 50px;
+            border: 2px solid #fff;
+            outline: none;
+            width: 300px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease-in-out;
+        }
+        .menu-container input:focus {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: magenta;
+        }
+        .menu-container button {
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            background: linear-gradient(90deg, magenta, violet);
+            color: white;
+            box-shadow: 0px 4px 15px rgba(255, 0, 255, 0.4);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        .menu-container button:hover {
+            background: linear-gradient(90deg, violet, magenta);
+        }
+        .menu-container button:active {
+            transform: translateY(-5px);
+            box-shadow: 0px 6px 20px rgba(255, 0, 255, 0.6);
+        }
+        .menu-container h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 10px rgba(255, 0, 255, 0.7);
+        }
+        .menu-container p {
+            font-size: 1.2rem;
+            color: #ccc;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Menú Inicial -->
+    <div class="menu-container" id="menuContainer">
+        <h1>¡Crea Tu Avatar!</h1>
+        <p>Introduce el nombre de tu avatar para comenzar:</p>
+        <input type="text" id="avatarName" placeholder="Nombre del avatar" />
+        <button id="startButton">¡Comenzar!</button>
+    </div>
+
+    <!-- Contenedor del iframe -->
+    <div class="menu-container hidden" id="iframeContainer">
+        <h1 id="header"></h1>
+        <iframe id="avatarFrame" style="width: 100%; height: 70%; border: none;"></iframe>
+    </div>
+
+    <script>
+        // Variables principales
+        const menuContainer = document.getElementById('menuContainer');
+        const iframeContainer = document.getElementById('iframeContainer');
+        const avatarNameInput = document.getElementById('avatarName');
+        const startButton = document.getElementById('startButton');
+        const header = document.getElementById('header');
+        const avatarFrame = document.getElementById('avatarFrame');
+
+        // Configuración inicial para ocultar el iframe
+        iframeContainer.style.display = 'none';
+
+        // Mostrar personalizador con el nombre del avatar
+        startButton.addEventListener('click', () => {
+            const avatarName = avatarNameInput.value.trim();
+
+            if (!avatarName) {
+                alert('Por favor, introduce un nombre para tu avatar.');
+                return;
+            }
+
+            // Mostrar mensaje personalizado en el encabezado
+            header.textContent = `¡Vamos allá, ${avatarName}!`;
+
+            // Mostrar el iframe con el personalizador
+            avatarFrame.src = "https://readyplayer.me/avatar?hide=checkOutPlayerZero,settings"; // Quitamos el mensaje y la configuración
+            menuContainer.style.display = 'none'; // Ocultar el menú
+            iframeContainer.style.display = 'flex'; // Mostrar el iframe
+        });
+
+        // Escuchar el evento del avatar exportado
+        window.addEventListener('message', (event) => {
+            const origin = 'https://readyplayer.me';
+            if (event.origin !== origin) return;
+
+            const data = JSON.parse(event.data);
+            if (data.source === 'readyplayerme' && data.eventName === 'v1.avatar.exported') {
+                console.log('Avatar URL recibido:', data.url);
+                iframeContainer.style.display = 'none'; // Ocultar el iframe
+                alert(`Avatar creado correctamente: ${data.url}`);
+            }
+        });
+
+        // Suscribirnos a eventos del iframe
+        avatarFrame.onload = () => {
+            avatarFrame.contentWindow.postMessage(
+                JSON.stringify({
+                    target: 'readyplayerme',
+                    type: 'subscribe',
+                    eventName: 'v1.avatar.exported'
+                }),
+                'https://readyplayer.me'
+            );
+        };
+    </script>
+</body>
+</html>
+
+
+
+
+
